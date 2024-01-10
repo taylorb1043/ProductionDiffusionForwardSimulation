@@ -206,15 +206,11 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                     rom[1,0] = (rom[0,0]+h*sum(romallsum))/2 #rom[0,0] is the issue, but idk why. causing nan after 3rd loop. problem in next loop?
                     print(rom[0,0])
                     print(rom[1,0])
-                    for k in range(0, j-2):
+                    for k in range(0, j-2): #something in here is not moving data from row 1 to row 0 after loop 3
                         rom[1, k] = ((4**(k-1))*rom[1, k-1]-rom[0, k-1])/((4**(k-1)-1))
                     rom[0, 0:j] = rom[1, 0:j]
                     h = h/2
                     print("im being annoying!!!")
-            #     testfunc = sp.integrate.romb(romall, r)
-            #     print(testfunc)
-            #     romHe.append(testfunc)
-            # print(romHe)
                 romHesub = rom[1, decdigs] #this should also yield atoms
                 romHe.append(romHesub)
             print(romHe)
