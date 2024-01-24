@@ -132,25 +132,38 @@ import scipy.io as sio
 #         romHe.append(romHesub)
 # print(romHe)
 
-A2 = [[0 for _ in range(3)] for _ in range(3)]
-A2[0][0], A2[0][1], A2[0][2] = 2.9899, -1, 0
-A2[1][0], A2[1][1], A2[1][2] = -1, 1.9899, -1
-A2[2][0], A2[2][1], A2[2][2] = 0, -1, 0.9899
+# A2 = [[0 for _ in range(3)] for _ in range(3)]
+# A2[0][0], A2[0][1], A2[0][2] = 2.9899, -1, 0
+# A2[1][0], A2[1][1], A2[1][2] = -1, 1.9899, -1
+# A2[2][0], A2[2][1], A2[2][2] = 0, -1, 0.9899
 
-oldU = [[0 for _ in range(1)] for _ in range(3)]
-oldU[0][0] = 0
-oldU[1][0] = 0
-oldU[2][0] = 0
+# oldU = [[0 for _ in range(1)] for _ in range(3)]
+# oldU[0][0] = 0
+# oldU[1][0] = 0
+# oldU[2][0] = 0
 
-mult = [[0 for _ in range(2)] for _ in range(3)]
-mult[0][0], mult[0][1] = 0.02136, 0.02228
-mult[1][0], mult[1][1] = 0.06409, 0.06685
-mult[2][0], mult[2][1] = 0.10683, 0.11141
+# mult = [[0 for _ in range(2)] for _ in range(3)]
+# mult[0][0], mult[0][1] = 0.02136, 0.02228
+# mult[1][0], mult[1][1] = 0.06409, 0.06685
+# mult[2][0], mult[2][1] = 0.10683, 0.11141
 
-b = []
-for f in range(0, len(oldU[0])):
-    sub = (np.matmul(A2, oldU)) - mult[:][f]
-    b.append(sub)
-b = np.array(b) #make list into an array
-b = np.transpose(b) #Each sample has its own column
-print(b)
+# b = []
+# for f in range(0, len(oldU[0])):
+#     sub = (np.matmul(A2, oldU)) - mult[:][f]
+#     b.append(sub)
+# b = np.array(b) #make list into an array
+# b = np.transpose(b) #Each sample has its own column
+# print(b)
+
+rom = np.zeros((2, 10))
+rom[0,0] = 1
+rom[1,0] = 2
+for i in range(0, 10):
+    print("i = ",i)
+    for k in range(2, i-2):
+        print("k = ",k)
+        print("rom[1, k-1] = ", rom[1, k-1])
+        print("rom[0, k-1] = ", rom[0, k-1])
+        #clive = ((4**(k-1))*rom[1, k-1]-rom[0, k-1])/(4**(k-1)-1)
+        clive = ((4**(k-1))*rom[1, k-1]-rom[0, k-1])/(4**(k-1)-1)
+        print(clive)
