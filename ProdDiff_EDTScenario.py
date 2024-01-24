@@ -6,7 +6,7 @@ Spherical-geometry production-diffusion model
 This has spatially homogeneous production that can vary with time. 
 Code was originally written by Greg Balco & David Shuster for modeling apatite 4He/3He datasets. Modified here by Marissa Tremblay to model production and diffusion of cosmogenic noble gases, and once again by Taylor Bourikas.
 Contact: tbourika@purdue.edu
-Last modified: 2023.11.28
+Last modified: 2024.01.18
 
 Copyright 2021, Marissa Tremblay
 All rights reserved
@@ -202,15 +202,12 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                     for num in romallsmall:
                         romallsum.append(num)
                     romallsum = np.array(romallsum) 
-                    #print(romallsum) #this is correct but want to display for reference for now
-                    rom[1,0] = (rom[0,0]+h*sum(romallsum))/2 #rom[0,0] is the issue, but idk why. causing nan after 3rd loop. problem in next loop?
-                    print(rom[0,0])
-                    print(rom[1,0])
-                    for k in range(0, j-2): #something in here is not moving data from row 1 to row 0 after loop 3
-                        rom[1, k] = ((4**(k-1))*rom[1, k-1]-rom[0, k-1])/((4**(k-1)-1))
-                    rom[0, 0:j] = rom[1, 0:j]
+                    rom[1,0] = (rom[0,0]+h*sum(romallsum))/2 
+                    for k in range(2, j+2):
+                        rom[1, k-1] = ((4**(k-1))*rom[1, k-2]-rom[0, k-2])/((4**(k-1)-1)) 
+                    rom[0] = rom[1]
                     h = h/2
-                    print("im being annoying!!!")
+                print(rom)
                 romHesub = rom[1, decdigs] #this should also yield atoms
                 romHe.append(romHesub)
             print(romHe)
