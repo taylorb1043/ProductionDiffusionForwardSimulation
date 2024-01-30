@@ -6,7 +6,7 @@ Spherical-geometry production-diffusion model
 This has spatially homogeneous production that can vary with time. 
 Code was originally written by Greg Balco & David Shuster for modeling apatite 4He/3He datasets. Modified here by Marissa Tremblay to model production and diffusion of cosmogenic noble gases, and once again by Taylor Bourikas.
 Contact: tbourika@purdue.edu
-Last modified: 2024.01.18
+Last modified: 2024.01.26
 
 Copyright 2021, Marissa Tremblay
 All rights reserved
@@ -20,7 +20,6 @@ import pandas as pd
 import numpy as np
 import math
 import statistics as stat
-import scipy as sp
 import wrap_PD_MDD_LGMScenario_MBTP1_fig3
 import MDD_retention_EDTScenario #imports variables from wrapper code
 from FormatNormLnD0aa import *
@@ -53,6 +52,12 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
     allLnD0aa=np.array(wrap_PD_MDD_LGMScenario_MBTP1_fig3.dataKD[3]) #vector of ln(D0/aa) for each domain. Technically unitless (normalized to 1/s)
     fracs=np.array(wrap_PD_MDD_LGMScenario_MBTP1_fig3.dataKD[4]) #fraction of gas apportioned to each diffusion domain
     #print(a, ndom, allEa, allLnD0aa, fracs)
+    actHeTot = [] #initialize list for total number of atoms
+    romHeTot = [] #initialize list for total number of romberg(?) atoms
+    totwtAll = [] #initialize list for total weight
+    actHeatomsg = [] #initialize list for total grams
+    romHeatomsg = [] #initialize list for total grams (romberg)
+    totProduced = [] #initialize list of atoms(?) produced
     "2) Set Up Production-Diffusion Calculation"
     for dom in range(0,len(ndom),1):
         thisdom = dom
@@ -207,20 +212,24 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                         rom[1, k-1] = ((4**(k-1))*rom[1, k-2]-rom[0, k-2])/((4**(k-1)-1)) 
                     rom[0] = rom[1]
                     h = h/2
-                print(rom)
-                romHesub = rom[1, decdigs] #this should also yield atoms
+                romHesub = rom[1, decdigs-1] #this should also yield atoms. 
                 romHe.append(romHesub)
-            print(romHe)
             #Number of atoms
-            actHe[thisdom] = actHe 
-            romhe[thisdom] = romHe 
-            totwt[thisdom] = totwt 
+            actHeTot.append(actHe)
+            print(actHeTot)
+            romHeTot.append(romHe)
+            print(romHeTot)
+            totwtAll.append(totwt)
+            print(totwtAll)
             #Number of atoms per gram
-            actHeatomsg[thisdom] = actHe/totwt
-            romHeatomsg[thisdom] = romHe/totwt
+            for sample in range(0, len(actHeTot[thisdom])):
+                actHeatomsg.append(actHeTot[thisdom][sample]/totwtAll[thisdom][sample])
+            for romSample in range(0, len(romHeTot[thisdom])):
+                romHeatomsg.append(romHeTot[thisdom][romSample]/totwtAll[thisdom][romSample])
             
             #Compute total produced
-            totProduced = sum(Ps*dt*totwt) #atoms
+            for samp in range(0, len(totwtAll[thisdom])):
+                totProduced.append(sum(Ps*dt*totwtAll[samp])) #atoms
             totHe = totHe[-1]
             
             checkTotal = stat.mean(Ps)*maxt

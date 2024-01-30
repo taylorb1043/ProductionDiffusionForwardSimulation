@@ -85,7 +85,7 @@ def MDD_retention_EDTScenario(fname, r):
         TC = np.transpose(temps)
         TC = np.fliplr(TC)
         TZ = np.fliplr(Tt)*ee*ztoday #calculate sample depth at each time step in g/cm^2
-        output = ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ)
+        output = ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ) #Last line worked on
         
         actRtstep = ProdDiff_EDTScenario.actRtstep 
         romRtstep = ProdDiff_EDTScenario.romRtstep 

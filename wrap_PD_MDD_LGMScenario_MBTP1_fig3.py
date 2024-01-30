@@ -60,7 +60,7 @@ fname = np.zeros((len(d), len(d[0]))) #initializing matrix
 for j in range(1,len(d[0]),1):
     fname[:, 0]=d[:, 0] #fname is the matrix created by this line from the txt file
     fname[:, 1]=d[:, j]
-    results = MDD_retention_EDTScenario(fname, r)
+    results = MDD_retention_EDTScenario(fname, r) #Last line worked on
     TotHestep[:, 0]=fname[:, 0] #time
     TotHestep[:, c]=results.TC #IsoEDT
     TotHestep[:, c+1]=results.actTotHestep #concentration variation
