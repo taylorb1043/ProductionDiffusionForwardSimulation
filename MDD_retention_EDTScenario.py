@@ -74,7 +74,7 @@ def MDD_retention_EDTScenario(fname, r):
     maxt = max(times) #total duration of the time-temperature history, in years
     times = np.atleast_2d(times).T
     Tt = np.transpose(times)
-    dt = maxt/(len(Tt[0])-1) #size of the time step, in years
+    dt = int(maxt/(len(Tt[0])-1)) #size of the time step, in years
     
     totProduced = [] #needed for for loop later
  

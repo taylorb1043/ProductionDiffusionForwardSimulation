@@ -6,7 +6,7 @@ Spherical-geometry production-diffusion model
 This has spatially homogeneous production that can vary with time. 
 Code was originally written by Greg Balco & David Shuster for modeling apatite 4He/3He datasets. Modified here by Marissa Tremblay to model production and diffusion of cosmogenic noble gases, and once again by Taylor Bourikas.
 Contact: tbourika@purdue.edu
-Last modified: 2024.01.26
+Last modified: 2024.02.05
 
 Copyright 2021, Marissa Tremblay
 All rights reserved
@@ -58,6 +58,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
     actHeatomsg = [] #initialize list for total grams
     romHeatomsg = [] #initialize list for total grams (romberg)
     totProduced = [] #initialize list of atoms(?) produced
+    checkTotal = [] #initialize list for checking number of atoms(?) produced
     "2) Set Up Production-Diffusion Calculation"
     for dom in range(0,len(ndom),1):
         thisdom = dom
@@ -93,8 +94,8 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
         "3) Initialize New Variables"
         oldC = np.zeros(np.size(x)) #initialize concentration vector
         tv = np.arange(0, (maxt+dt), dt) #initialize time vector
-        Ps = [] #initialize production vector
-        totHe = [] #initialize vector for total He produced
+        Ps = np.zeros((len(Pref), len(Tt[0]))) #initialize production vector
+        totHe = [0]*(len(Tt[0])) #initialize vector for total He produced
         "4) Start the Solver Loop"
         #Production in time step 1
         for a in range(0, len(tv)): #Step 1 is all zeros, start at step 2
@@ -103,24 +104,20 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             oldU = []
             for u in range(0, len(oldC)):
                 oldU.append(oldC[u]*x[u])
-            #print(oldU)
             oldU = np.array(oldU)
             #Obtain K
             Tt = Tt.flatten() #numpy interp function needs 1D arrays, and Tt is techically 2D (1, 181). Same for T and TZ.
             T = T.flatten()
             thisT = np.interp(tv[a], Tt, T) #temperature vector, interpolated between
-            #print(D0) #D0 incorrect
             D = D0*math.exp(-ea/R*(1/(thisT))) #diffusivity in cm^2/yr
             K = D
             #Solver setup
-            #print(K)
-            beta = 2*(dx**2)/(K*dt) #K is incorrect
+            beta = 2*(dx**2)/(K*dt)
             A1 = np.diag(np.diag(np.ones((n, n))))*(-2-beta) + np.diag(np.diag(np.ones((n-1, n-1))), -1) + np.diag(np.diag(np.ones((n-1, n-1))), 1)
             A2 = np.diag(np.diag(np.ones((n, n))))*(2-beta) - np.diag(np.diag(np.ones((n-1, n-1))), -1) - np.diag(np.diag(np.ones((n-1, n-1))), 1)
             #No-flux LH boundary
             A1[0][0] = A1[0][0]-1
             A2[0][0] = A2[0][0]+1
-            #print(np.shape(oldU))
             #He source
             #This is due to cosmic ray production
             #Obtain depth
@@ -132,15 +129,19 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             #Compute production at depth
             Pofx = P0*np.exp(-thisz/Lsp) #Atoms/g/yr
             #store for tot-up calculation later
-            Ps.append(Pofx)
+            for val in range(0, len(Pofx)):
+                Ps[val, a] = Pofx[val]
             #Add source to totHe - remember totHe is total He production, not how much He is in grain now. totHe should be exact always
             newhe = [] #atoms
+            print(Pofx)
+            print(shellwt)
             for g in range(0, len(Pofx)):
                 newhesub = []
                 for h in range(0, len(shellwt[0])):
                     newhesub.append(Pofx[g]*shellwt[0][h]*dt)
                 newhesub = np.array(newhesub)
                 newhe.append(newhesub)
+            print(newhe)
             if a==0:
                 for u in range(0, len(newhe)):
                     sumhe = sum(newhe[u])
@@ -216,11 +217,8 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 romHe.append(romHesub)
             #Number of atoms
             actHeTot.append(actHe)
-            print(actHeTot)
             romHeTot.append(romHe)
-            print(romHeTot)
             totwtAll.append(totwt)
-            print(totwtAll)
             #Number of atoms per gram
             for sample in range(0, len(actHeTot[thisdom])):
                 actHeatomsg.append(actHeTot[thisdom][sample]/totwtAll[thisdom][sample])
@@ -228,15 +226,21 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 romHeatomsg.append(romHeTot[thisdom][romSample]/totwtAll[thisdom][romSample])
             
             #Compute total produced
+            totProducedsub = []
             for samp in range(0, len(totwtAll[thisdom])):
-                totProduced.append(sum(Ps*dt*totwtAll[samp])) #atoms
-            totHe = totHe[-1]
+                totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
+            totProduced.append(totProducedsub)
+            #print(totHe)
+            totHe = totHe[-1] #this is causing issues
             
-            checkTotal = stat.mean(Ps)*maxt
-            
-            actR = actHe/totProduced
-            romR = romHe/totProduced
-            checkR = actHe/checkTotal/totwt
+            romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
+            checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
+            for sam in range(0, len(Ps)):
+                checkTotalsub.append(stat.mean(Ps[sam])*maxt)
+                actR = actHeTot[thisdom][sam]/totProduced[thisdom][sam]
+                romR = romHeTot[thisdom][sam]/totProduced[thisdom][sam]
+                checkR = actHeTot[thisdom][sam]/checkTotalsub[sam]/totwtAll[thisdom][sam]
+            checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
         
         #a this the time step, so here we have R and He for each time step for the given domain
         actRsave[a,dom] = actR
@@ -264,5 +268,5 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
     romTotHestep = sum(romTotHesave, 2)
     totProducedConcstep = sum(totProducedConc, 2)
     
-    return P0, tv, depth
+    return P0, actHeTot, romHeTot, totwtAll, actHeatomsg, romHeatomsg, tv, depth
     print(tv, depth)
