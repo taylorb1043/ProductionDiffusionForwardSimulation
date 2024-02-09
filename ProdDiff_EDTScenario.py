@@ -96,7 +96,6 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
         tv = np.arange(0, (maxt+dt), dt) #initialize time vector
         Ps = np.zeros((len(Pref), len(Tt[0]))) #initialize production vector
         totHe = [] #initialize vector for total He produced
-        print(type(totHe))
         "4) Start the Solver Loop"
         #Production in time step 1
         for a in range(0, len(tv)): #Step 1 is all zeros, start at step 2
@@ -134,6 +133,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 Ps[val, a] = Pofx[val]
             #Add source to totHe - remember totHe is total He production, not how much He is in grain now. totHe should be exact always
             newhe = [] #atoms
+            print(totHe)
             for g in range(0, len(Pofx)):
                 newhesub = []
                 for h in range(0, len(shellwt)):
@@ -141,21 +141,23 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 newhesub = np.array(newhesub)
                 newhe.append(newhesub)
             newhe = np.transpose(newhe)
-            sumhe = 0 #for summing together all helium atoms
-            print(newhe)
             if a==0:
-                for v in range(0, len(newhe[0])): #0-3
-                    for u in range(0, len(newhe)): #0-511
-                        sumhe += newhe[u][v] #not confident that this is giving me the correct values
-                    print(type(sumhe)) #sumhe is numpy.float64, which means it cant be appended????
-                    print(sumhe)
-                    totHe.append([sumhe]) #atoms
-            else:
-                for v in range(0, len(newhe[0])):
+                for v in range(0, len(newhe[0])): 
+                    sumhe = 0 #for summing together all helium atoms
                     for u in range(0, len(newhe)):
-                        sumhe = newhe[u][v]
-                    totHe.append([totHe[a-1] + sumhe]) #atoms
-            print(totHe)
+                        sumhe += newhe[u][v] 
+                    totHe.append(sumhe) #atoms
+                print(totHe) #currently [sample 1, sample 2, sample 3, sample 4]
+            else:
+                newsumlist = []
+                for v in range(0, len(newhe[0])):
+                    sumhe = 0
+                    for u in range(0, len(newhe)):
+                        sumhe += newhe[u][v]
+                    print(totHe) #only sample 4 from a=0. why?? 
+                    newsum = sumhe + totHe[a-1]
+                    newsumlist.append(newsum)
+                totHe.append(newsumlist) #atoms
             #Build RHS
             mult = [] #atoms
             for g in range(0, len(Pofx)):
