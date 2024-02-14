@@ -133,7 +133,6 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 Ps[val, a] = Pofx[val]
             #Add source to totHe - remember totHe is total He production, not how much He is in grain now. totHe should be exact always
             newhe = [] #atoms
-            print(totHe)
             for g in range(0, len(Pofx)):
                 newhesub = []
                 for h in range(0, len(shellwt)):
@@ -142,19 +141,21 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 newhe.append(newhesub)
             newhe = np.transpose(newhe)
             if a==0:
+                sumhelist = [] #for summing later
                 for v in range(0, len(newhe[0])): 
                     sumhe = 0 #for summing together all helium atoms
                     for u in range(0, len(newhe)):
                         sumhe += newhe[u][v] 
-                    totHe.append(sumhe) #atoms
-                print(totHe) #currently [sample 1, sample 2, sample 3, sample 4]
+                    sumhelist.append(sumhe)
+                totHe.append(sumhelist) #atoms
             else:
+                sumhelist = [] #for summing later
                 newsumlist = []
                 for v in range(0, len(newhe[0])):
                     sumhe = 0
                     for u in range(0, len(newhe)):
                         sumhe += newhe[u][v]
-                    print(totHe) #only sample 4 from a=0. why?? 
+                    sumhelist.append(sumhe)
                     newsum = sumhe + totHe[a-1]
                     newsumlist.append(newsum)
                 totHe.append(newsumlist) #atoms
@@ -203,11 +204,11 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             romHe = []
             for rhocount in range(0, len(rho)):
                 decdigs = 1+round(math.log2(n-1))
-                rom = np.zeros((2, decdigs))
+                rom = [[0 for col in range(decdigs)] for row in range(2)]
                 romall = oldC[:,rhocount]*4*math.pi*(x**2)*rho[rhocount]
                 romall = np.append(romall, 0)
                 h = r
-                rom[0,0] = h*(romall[0]+romall[-1])/2
+                rom[0][0] = h*(romall[0]+romall[-1])/2
                 for j in range(1, decdigs):
                     st=2**(decdigs-j)
                     romallsum = []
@@ -215,14 +216,16 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                     for num in romallsmall:
                         romallsum.append(num)
                     romallsum = np.array(romallsum) 
-                    rom[1,0] = (rom[0,0]+h*sum(romallsum))/2 
+                    rom[1][0] = (rom[0][0]+h*sum(romallsum))/2 
                     for k in range(2, j+2):
-                        rom[1, k-1] = ((4**(k-1))*rom[1, k-2]-rom[0, k-2])/((4**(k-1)-1)) 
+                        rom[1][k-1] = ((4**(k-1))*rom[1][k-2]-rom[0][k-2])/((4**(k-1)-1)) 
                     rom[0] = rom[1]
                     h = h/2
-                romHesub = rom[1, decdigs-1] #this should also yield atoms. 
+                romHesub = rom[1][decdigs-1] #this should also yield atoms. 
                 romHe.append(romHesub)
             #Number of atoms
+            print(type(romHe))
+            print(romHe)
             actHeTot.append(actHe)
             romHeTot.append(romHe)
             totwtAll.append(totwt)
@@ -238,7 +241,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
             totProduced.append(totProducedsub)
             #print(totHe)
-            totHe = totHe[-1] #this is causing issues
+            totHe = totHe[-1] #this is causing issues- how do I say the previous list and not the previous value?
             
             romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
             checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
