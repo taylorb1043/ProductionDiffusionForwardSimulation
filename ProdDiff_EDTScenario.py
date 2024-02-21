@@ -149,16 +149,15 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                     sumhelist.append(sumhe)
                 totHe.append(sumhelist) #atoms
             else:
-                sumhelist = [] #for summing later
                 newsumlist = []
                 for v in range(0, len(newhe[0])):
                     sumhe = 0
                     for u in range(0, len(newhe)):
                         sumhe += newhe[u][v]
-                    sumhelist.append(sumhe)
-                    newsum = sumhe + totHe[a-1]
+                        newsum = sumhe + totHe[a-1][v]
                     newsumlist.append(newsum)
                 totHe.append(newsumlist) #atoms
+            
             #Build RHS
             mult = [] #atoms
             for g in range(0, len(Pofx)):
@@ -224,8 +223,6 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 romHesub = rom[1][decdigs-1] #this should also yield atoms. 
                 romHe.append(romHesub)
             #Number of atoms
-            print(type(romHe))
-            print(romHe)
             actHeTot.append(actHe)
             romHeTot.append(romHe)
             totwtAll.append(totwt)
@@ -240,8 +237,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             for samp in range(0, len(totwtAll[thisdom])):
                 totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
             totProduced.append(totProducedsub)
-            #print(totHe)
-            totHe = totHe[-1] #this is causing issues- how do I say the previous list and not the previous value?
+            #totHe[dom] = 0 #this is causing it to take on the previous value, which is not what we want. the original code in matlab is totHe(thisdom) = totHe(end), and in matlab totHe(end) = 0.
             
             romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
             checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
@@ -251,6 +247,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 romR = romHeTot[thisdom][sam]/totProduced[thisdom][sam]
                 checkR = actHeTot[thisdom][sam]/checkTotalsub[sam]/totwtAll[thisdom][sam]
             checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
+            romHeTot = list(romHeTot) #converts array back into list so more values can be appended to it
         
         #a this the time step, so here we have R and He for each time step for the given domain
         actRsave[a,dom] = actR
