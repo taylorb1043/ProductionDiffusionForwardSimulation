@@ -59,6 +59,8 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
     romHeatomsg = [] #initialize list for total grams (romberg)
     totProduced = [] #initialize list of atoms(?) produced
     checkTotal = [] #initialize list for checking number of atoms(?) produced
+    actRsave = []
+    romRsave = []
     "2) Set Up Production-Diffusion Calculation"
     for dom in range(0,len(ndom),1):
         thisdom = dom
@@ -88,6 +90,9 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
         #calculate geographic scaling factor and multiply by the reference production rate, shielding correction factor, and thickness correction factor to determine the local cosmogenic muclide production rate
         stone = stone2000(lat, pressure, fsp) 
         P0 = []
+        actRsave = []
+        romRsave = []
+        checkRlist = []
         for p in range(0, len(Pref)):     
             P0sub = Pref[p]*shield[p]*thickcorr[p]*stone[p]
             P0.append(P0sub)
@@ -237,21 +242,30 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             for samp in range(0, len(totwtAll[thisdom])):
                 totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
             totProduced.append(totProducedsub)
-            #totHe[dom] = 0 #this is causing it to take on the previous value, which is not what we want. the original code in matlab is totHe(thisdom) = totHe(end), and in matlab totHe(end) = 0.
+            
             
             romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
             checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
+            actRlist = []
+            romRlist = []
+            checkRlist = []
             for sam in range(0, len(Ps)):
                 checkTotalsub.append(stat.mean(Ps[sam])*maxt)
-                actR = actHeTot[thisdom][sam]/totProduced[thisdom][sam]
-                romR = romHeTot[thisdom][sam]/totProduced[thisdom][sam]
-                checkR = actHeTot[thisdom][sam]/checkTotalsub[sam]/totwtAll[thisdom][sam]
+                actR = actHeTot[a][sam]/totProduced[a][sam]
+                actRlist.append(actR)
+                romR = romHeTot[a][sam]/totProduced[a][sam]
+                romRlist.append(romR)
+                checkR = actHeTot[a][sam]/checkTotalsub[sam]/totwtAll[a][sam]
+                checkRlist.append(checkR)
+            actRsave.append(actRlist)
+            romRsave.append(romRlist)
             checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
             romHeTot = list(romHeTot) #converts array back into list so more values can be appended to it
         
         #a this the time step, so here we have R and He for each time step for the given domain
-        actRsave[a,dom] = actR
-        romRsave[a,dom] = romR
+        actRsave.append(actRlist) #currently (182, 4)...one extra row at the end?? seems to repeat whatever the last line is.
+        print(actRsave)
+        romRsave.append(romRsave)
         #Add Nat
         actTotHesave[a,dom] = actHeatomsg
         romTotHesave[a,dom] = romHeatomsg
