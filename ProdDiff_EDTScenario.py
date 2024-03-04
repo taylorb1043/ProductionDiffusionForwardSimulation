@@ -208,14 +208,13 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             #This code taken from rombint.m
             #Figure number of iterations
             romHe = []
-            print(len(rho))
-            for rhocount in range(0, len(rho)): #WHY IS THIS RUNNING 181 TIMES.
+            for rhocount in range(0, len(rho)):
                 decdigs = 1+round(math.log2(n-1))
                 rom = [[0 for col in range(decdigs)] for row in range(2)]
                 romall = oldC[:,rhocount]*4*math.pi*(x**2)*rho[rhocount]
                 romall = np.append(romall, 0)
                 h = r
-                rom[0][0] = h*(romall[0]+romall[-1])/2 #this is correct
+                rom[0][0] = h*(romall[0]+romall[-1])/2
                 for j in range(1, decdigs):
                     st=2**(decdigs-j)
                     romallsum = []
@@ -223,45 +222,47 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                     for num in romallsmall:
                         romallsum.append(num)
                     romallsum = np.array(romallsum) 
-                    rom[1][0] = (rom[0][0]+h*sum(romallsum))/2 #romHe is being taken from the last value here. These values are still correct, but are not the ones that should be added to romHe
+                    rom[1][0] = (rom[0][0]+h*sum(romallsum))/2 
                     for k in range(2, j+2):
                         rom[1][k-1] = ((4**(k-1))*rom[1][k-2]-rom[0][k-2])/((4**(k-1)-1)) 
                     rom[0][0:j] = rom[1][0:j]
                     h = h/2
                 romHesub = rom[0][decdigs-2] #this should also yield atoms.
-                print(romHesub)
                 romHe.append(romHesub)
             #Number of atoms
             actHeTot.append(actHe)
-            romHeTot = romHe
-            #print(romHeTot)
+            romHeTot = romHe #full list of values here
+            print(romHeTot)
             totwtAll.append(totwt)
             
             #Compute total produced
             totProducedsub = []
+            romRlist = []
             for samp in range(0, len(totwtAll[thisdom])):
                 totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
             totProduced.append(totProducedsub)
             
             
             romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
-            checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
-            actRlist = []
-            romRlist = []
-            checkRlist = []
-            for sam in range(0, len(Ps)):
-                checkTotalsub.append(stat.mean(Ps[sam])*maxt)
-                actR = actHeTot[a][sam]/totProduced[a][sam]
-                actRlist.append(actR)
-                romR = romHeTot[sam]/totProduced[a][sam]
-                romRlist.append(romR)
-                checkR = actHeTot[a][sam]/checkTotalsub[sam]/totwtAll[a][sam]
-                checkRlist.append(checkR)
-            actRsave.append(actRlist)
-            romRsave.append(romRlist)
-            #print(romRsave)
-            checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
-            romHeTot = list(romHeTot) #converts array back into list so more values can be appended to it
+        checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
+        actRlist = []
+        romRlist = []
+        checkRlist = []
+        
+        print(romHeTot)#only prints the very last line of romHeTot
+        for sam in range(0, len(Ps)):
+            checkTotalsub.append(stat.mean(Ps[sam])*maxt)
+            actR = actHeTot[a][sam]/totProduced[a][sam]
+            actRlist.append(actR)
+            romR = romHeTot[sam]/totProduced[a][sam]
+            romRlist.append(romR)
+            checkR = actHeTot[a][sam]/checkTotalsub[sam]/totwtAll[a][sam]
+            checkRlist.append(checkR)
+        actRsave.append(actRlist)
+        romRsave.append(romRlist)
+        #print(romRsave)
+        checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
+        romHeTot = list(romHeTot) #converts array back into list so more values can be appended to it
         
         #a this the time step, so here we have R and He for each time step for the given domain
 
