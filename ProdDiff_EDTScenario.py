@@ -63,6 +63,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
     romRsave = []
     actTotHesave = []
     romTotHesave = []
+    totProducedConc = [] #total produced concentration of atoms
     "2) Set Up Production-Diffusion Calculation"
     for dom in range(0,len(ndom),1):
         thisdom = dom
@@ -137,7 +138,7 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             Pofx = P0*np.exp(-thisz/Lsp) #Atoms/g/yr
             #store for tot-up calculation later
             for val in range(0, len(Pofx)):
-                Ps[val, a] = Pofx[val]
+                Ps[val][a] = Pofx[val] 
             #Add source to totHe - remember totHe is total He production, not how much He is in grain now. totHe should be exact always
             newhe = [] #atoms
             for g in range(0, len(Pofx)):
@@ -231,8 +232,8 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
                 romHe.append(romHesub)
             #Number of atoms
             actHeTot.append(actHe)
-            romHeTot = romHe #full list of values here
-            print(romHeTot)
+            romHeTot = list(romHeTot)
+            romHeTot.append(romHe)
             totwtAll.append(totwt)
             
             #Compute total produced
@@ -241,7 +242,11 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             for samp in range(0, len(totwtAll[thisdom])):
                 totProducedsub.append(sum(Ps[samp]*dt*totwtAll[thisdom][samp])) #atoms
             totProduced.append(totProducedsub)
-            
+            sumlist = []
+            for psNum in range(0, len(Ps)):
+                sums = sum(Ps[psNum]*dt)
+                sumlist.append(sums)
+            totProducedConc.append(sumlist) #atoms
             
             romHeTot = np.array(romHeTot) #converts list to array so that later calculations are possible
         checkTotalsub = [] #creates list to calculate checkTotal for every sample in this domain
@@ -249,18 +254,16 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
         romRlist = []
         checkRlist = []
         
-        print(romHeTot)#only prints the very last line of romHeTot
         for sam in range(0, len(Ps)):
             checkTotalsub.append(stat.mean(Ps[sam])*maxt)
-            actR = actHeTot[a][sam]/totProduced[a][sam]
+            actR = actHeTot[a][sam]/totProduced[a][sam] 
             actRlist.append(actR)
-            romR = romHeTot[sam]/totProduced[a][sam]
+            romR = romHeTot[dom][sam]/totProduced[dom][sam]
             romRlist.append(romR)
             checkR = actHeTot[a][sam]/checkTotalsub[sam]/totwtAll[a][sam]
             checkRlist.append(checkR)
         actRsave.append(actRlist)
         romRsave.append(romRlist)
-        #print(romRsave)
         checkTotal.append(checkTotalsub) #append the checkTotalsub amounts for this domain to the masterlist
         romHeTot = list(romHeTot) #converts array back into list so more values can be appended to it
         
@@ -274,16 +277,16 @@ def ProdDiff_EDTScenario(r, n, maxt, Tt, dt, TC, TZ):
             romHeatomsg.append(romHeTot[thisdom][romSample]/totwtAll[thisdom][romSample])
         #Add Nat
         actTotHesave.append(actHeatomsg)
-        #print(actTotHesave)
         romTotHesave.append(romHeatomsg)
-        totProducedConc[a,thisdom] = sum(Ps*dt) #atoms
         
-        actRsave[:,dom] = actRsave[:,dom]*fracs[dom]
-        romRsave[:,dom] = romRsave[:,dom]*fracs[dom]
-        #Add Nat
-        actTotHesave[:,dom] = actTotHesave[:,dom]*fracs[dom]
-        romTotHesave[:,dom] = romTotHesave[:,dom]*fracs[dom]
-        totProducedConc[:,dom] = totProducedConc[:,dom]*fracs[dom]
+        for num in range(0, len(actRsave[:][dom])):
+            actRsave[:][dom][num] = actRsave[:][dom][num]*fracs[dom]
+            romRsave[:][dom][num] = romRsave[:][dom][num]*fracs[dom]
+            #Add Nat
+            actTotHesave[:][dom][num] = actTotHesave[:][dom][num]*fracs[dom]
+            romTotHesave[:][dom][num] = romTotHesave[:][dom][num]*fracs[dom]
+            totProducedConc[:][dom][num] = totProducedConc[:][dom][num]*fracs[dom]
+        print(actRsave) #only shows very last row of what's supposed to be actRsave.
     
     "5) Sum Up Retention Over All Domains"
     actRtotal = sum(actR*fracs)
